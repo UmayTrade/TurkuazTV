@@ -1,9 +1,2 @@
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-        google()
-    }
-}
-
-rootProject.name = "TurkuazTV-Plugin"
+rootProject.name = "TurkuazTV"
+include(":BelgeselX")
