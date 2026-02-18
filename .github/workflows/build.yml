@@ -47,15 +47,19 @@ jobs:
       - name: Build Plugins
         run: |
           chmod +x gradlew
-          ./gradlew make
+          ./gradlew assembleRelease
+          echo "Build completed"
+          ls -R build/
 
       # ----------------------------
       # Prepare builds folder
       # ----------------------------
       - name: Collect build outputs
         run: |
-          mkdir builds
-          find . -type f -name "*.cs3" -exec cp {} builds \;
+          mkdir -p builds
+          find . -type f -name "*.cs3" -exec cp {} builds/ \;
+          echo "Collected files:"
+          ls builds/
 
       # ----------------------------
       # Generate plugins.json
@@ -71,7 +75,6 @@ jobs:
             else
               echo "," >> plugins.json
             fi
-
             echo "  {" >> plugins.json
             echo "    \"name\": \"${file%.cs3}\"," >> plugins.json
             echo "    \"url\": \"https://raw.githubusercontent.com/${{ github.repository }}/builds/$file\"" >> plugins.json
@@ -90,10 +93,8 @@ jobs:
           git checkout -B builds
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-
           git add .
           git commit -m "Build $GITHUB_SHA" || exit 0
-
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git push origin builds --force
 
