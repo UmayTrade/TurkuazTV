@@ -16,6 +16,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}   # PAT burada tüm job için geçerli
+
     steps:
       # ----------------------------
       # Checkout Source
@@ -87,8 +90,6 @@ jobs:
       # Push to builds branch using PAT
       # ----------------------------
       - name: Push builds branch
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           cd builds
           git init
@@ -105,8 +106,6 @@ jobs:
       # ----------------------------
       - name: Create Tag
         id: tag
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           VERSION="v$(date +'%Y.%m.%d.%H%M%S')"
           git tag $VERSION
