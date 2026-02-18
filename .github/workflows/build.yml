@@ -84,9 +84,11 @@ jobs:
           echo "]" >> plugins.json
 
       # ----------------------------
-      # Push to builds branch
+      # Push to builds branch using PAT
       # ----------------------------
       - name: Push builds branch
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           cd builds
           git init
@@ -95,7 +97,7 @@ jobs:
           git config user.name "GitHub Actions"
           git add .
           git commit -m "Build $GITHUB_SHA" || exit 0
-          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git remote add origin https://x-access-token:$PAT_TOKEN@github.com/${{ github.repository }}
           git push origin builds --force
 
       # ----------------------------
@@ -103,10 +105,12 @@ jobs:
       # ----------------------------
       - name: Create Tag
         id: tag
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           VERSION="v$(date +'%Y.%m.%d.%H%M%S')"
           git tag $VERSION
-          git push origin $VERSION
+          git push https://x-access-token:$PAT_TOKEN@github.com/${{ github.repository }} $VERSION
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       # ----------------------------
