@@ -1,3 +1,4 @@
+
 name: Build & Release
 
 concurrency:
@@ -15,9 +16,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    env:
-      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}   # PAT tüm job için geçerli
 
     steps:
       # ----------------------------
@@ -50,19 +48,24 @@ jobs:
       - name: Build Plugins
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease
-          echo "Build completed"
-          ls -R build/
+          ./gradlew make
 
       # ----------------------------
       # Prepare builds folder
       # ----------------------------
       - name: Collect build outputs
         run: |
-          mkdir -p builds
-          find . -type f -name "*.cs3" -exec cp {} builds/ \;
-          echo "Collected files:"
-          ls builds/
+          rm -rf builds
+          mkdir builds
+          find . -type f -name "*.cs3" -exec cp {} builds \;
+
+      # ----------------------------
+      # Debug (kontrol amaçlı)
+      # ----------------------------
+      - name: Debug builds folder
+        run: |
+          echo "Build klasörü içeriği:"
+          ls -la builds
 
       # ----------------------------
       # Generate plugins.json
@@ -70,24 +73,32 @@ jobs:
       - name: Generate plugins.json
         run: |
           cd builds
+          shopt -s nullglob
+
           echo "[" > plugins.json
           first=true
+
           for file in *.cs3; do
             if [ "$first" = true ]; then
               first=false
             else
               echo "," >> plugins.json
             fi
+
             echo "  {" >> plugins.json
             echo "    \"name\": \"${file%.cs3}\"," >> plugins.json
             echo "    \"url\": \"https://raw.githubusercontent.com/${{ github.repository }}/builds/$file\"" >> plugins.json
             echo -n "  }" >> plugins.json
           done
+
           echo "" >> plugins.json
           echo "]" >> plugins.json
 
+          echo "Oluşturulan plugins.json:"
+          cat plugins.json
+
       # ----------------------------
-      # Push to builds branch using PAT
+      # Push to builds branch
       # ----------------------------
       - name: Push builds branch
         run: |
@@ -96,11 +107,11 @@ jobs:
           git checkout -B builds
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
+
           git add .
           git commit -m "Build $GITHUB_SHA" || exit 0
 
-          # x-access-token kullanılıyor → kesinlikle authentication hatası vermez
-          git remote add origin https://x-access-token:$PAT_TOKEN@github.com/${{ github.repository }}.git
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git push origin builds --force
 
       # ----------------------------
@@ -111,7 +122,7 @@ jobs:
         run: |
           VERSION="v$(date +'%Y.%m.%d.%H%M%S')"
           git tag $VERSION
-          git push https://x-access-token:$PAT_TOKEN@github.com/${{ github.repository }} $VERSION
+          git push origin $VERSION
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       # ----------------------------
