@@ -28,7 +28,7 @@ jobs:
       # 3. Build İşlemi (Buraya kendi build komutlarını ekleyebilirsin)
       - name: Build Project
         run: |
-          echo "Build işlemi başlatıldı: UmayTrade/Mytv"
+          echo "Build işlemi başlatıldı: UmayTrade/TurkuazTV"
           # Örnek: Dosyaları 'builds' klasörüne topladığını varsayalım
           mkdir -p builds
           cp *.cs3 builds/ 2>/dev/null || true
